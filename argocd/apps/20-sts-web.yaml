@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sts-web
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: sts-lab
+  source:
+    repoURL: https://github.com/shm2/argocd-kyverno-helm-conglomerate.git
+    targetRevision: main
+    path: charts/sts-web
+    helm:
+      # Stable release name matches StatefulSet and Service names.
+      releaseName: sts-web
+      valueFiles:
+        - values.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

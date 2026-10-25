@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app.kubernetes.io/name: sts-web
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  # Git sets the replica count; Argo CD self-heal may reverse kubectl scale.
+  replicas: {{ .Values.replicaCount }}
+  serviceName: {{ .Release.Name }}-headless
+  podManagementPolicy: OrderedReady
+  minReadySeconds: 3
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: {{ .Values.rollingUpdate.partition }}
+  # Preserve the claim even when an ordinal is scaled away or STS is deleted.
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sts-web
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      annotations:
+        # Changes to the Pod template trigger a rolling update in ordinal order.
+        lab.example.com/rollout-marker: {{ .Values.rolloutMarker | quote }}
+      labels:
+        app.kubernetes.io/name: sts-web
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        # Demonstrates Kyverno's namespace-scoped Pod-label policy.
+        lab-owner: gitops
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+      affinity:
+        podAntiAffinity:
+          # Prefer separate nodes but never block a 3-Pod STS on 2 workers.
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: sts-web
+                    app.kubernetes.io/instance: {{ .Release.Name }}
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: web
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              # Write the identity only once, so Pod recreation proves persistence.
+              mkdir -p /data/html
+              if [ ! -f /data/html/index.html ]; then
+                printf 'pod=%s\nfirst_initialized_utc=%s\n' \
+                  "$HOSTNAME" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" > /data/html/index.html
+              fi
+              # BusyBox httpd stays in the foreground as the container process.
+              exec httpd -f -p 8080 -h /data/html
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.storage.className | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.storage.size | quote }}

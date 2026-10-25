@@ -1,0 +1,28 @@
+# Number of stable StatefulSet ordinal identities (0, 1, 2)
+replicaCount: 3
+
+# Bump this value in Git to demonstrate a StatefulSet rolling update.
+rolloutMarker: "v1"
+
+# Change partition=2 for a canary rollout of ordinal 2 only.
+rollingUpdate:
+  partition: 0
+
+image:
+  repository: busybox
+  tag: "1.36"
+  pullPolicy: IfNotPresent
+
+# Your installed, verified kubeadm NFS CSI StorageClass
+storage:
+  className: nfs-argocd
+  size: 1Gi
+
+# Small enough to share your 4 GiB worker VMs with other labs
+resources:
+  requests:
+    cpu: 20m
+    memory: 32Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi

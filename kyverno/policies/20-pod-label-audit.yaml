@@ -1,0 +1,25 @@
+apiVersion: policies.kyverno.io/v1
+kind: NamespacedValidatingPolicy
+metadata:
+  # Namespace-scoped policy: no effect on Argo CD, Redis, or MySQL.
+  name: sts-lab-pod-owner
+  namespace: sts-lab
+  annotations:
+    policies.kyverno.io/title: Pod Lab Ownership Label
+spec:
+  # Phase one: record violations instead of rejecting admission.
+  # Change Audit -> Deny IN GIT after you observe the first PolicyReport.
+  validationActions:
+    - Audit
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods"]
+  validations:
+    - expression: >-
+        has(object.metadata.labels) &&
+        'lab-owner' in object.metadata.labels &&
+        object.metadata.labels['lab-owner'] == 'gitops'
+      message: "Pods in sts-lab must have lab-owner=gitops"

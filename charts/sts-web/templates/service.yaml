@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-headless
+  labels:
+    app.kubernetes.io/name: sts-web
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  # This Service provides per-Pod DNS identities; it does not allocate a ClusterIP.
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app.kubernetes.io/name: sts-web
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app.kubernetes.io/name: sts-web
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  # Ordinary load-balanced ClusterIP for browser/port-forward demonstration.
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: sts-web
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

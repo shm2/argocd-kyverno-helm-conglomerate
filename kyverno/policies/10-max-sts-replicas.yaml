@@ -1,0 +1,21 @@
+apiVersion: policies.kyverno.io/v1
+kind: NamespacedValidatingPolicy
+metadata:
+  # This policy protects only the separate training namespace.
+  name: sts-lab-max-replicas
+  namespace: sts-lab
+  annotations:
+    policies.kyverno.io/title: StatefulSet Replica Budget
+spec:
+  # Deny writes attempting to exceed three replicas.
+  validationActions:
+    - Deny
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["apps"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["statefulsets"]
+  validations:
+    - expression: "object.spec.replicas <= 3"
+      message: "sts-lab StatefulSets must have no more than three replicas"

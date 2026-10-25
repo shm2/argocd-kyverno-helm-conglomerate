@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sts-lab-policies
+  namespace: argocd
+  annotations:
+    # Useful with admission-webhook mutations; harmless for validating-only policies.
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: sts-lab
+  source:
+    repoURL: https://github.com/shm2/argocd-kyverno-helm-conglomerate.git
+    targetRevision: main
+    path: kyverno/policies
+    directory:
+      recurse: false
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

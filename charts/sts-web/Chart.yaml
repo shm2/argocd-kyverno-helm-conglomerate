@@ -1,0 +1,7 @@
+apiVersion: v2
+name: sts-web
+version: 0.1.0
+appVersion: "1.0"
+description: >-
+  Three-replica StatefulSet with stable NFS-backed storage for kubeadm GitOps labs.
+type: application
