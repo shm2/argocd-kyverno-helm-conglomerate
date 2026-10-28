@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: syncopts-main
+  namespace: syncopts-lab
+  labels:
+    lab: argocd-sync-options
+    contender: "true"
+data:
+  message: "contender-should-not-take-ownership"

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: syncopts-main
+  namespace: syncopts-lab
+  labels:
+    lab: argocd-sync-options
+    component: primary
+  annotations:
+    # This resource uses application-wide ServerSideApply=true.
+    lab.example/notes: "Auto-sync, self-heal, and ignoreDifferences demo"
+data:
+  message: "hello-v1"
+  runtime: "git-default"

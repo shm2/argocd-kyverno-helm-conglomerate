@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: syncopts-protected
+  namespace: syncopts-lab
+  annotations:
+    # Overrides application-wide automated pruning for THIS object only.
+    # Removing its YAML from Git will leave it running and OutOfSync.
+    argocd.argoproj.io/sync-options: Prune=false
+  labels:
+    lab: argocd-sync-options
+data:
+  status: "prune-is-disabled-for-this-object"

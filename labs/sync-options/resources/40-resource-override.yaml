@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: syncopts-override
+  namespace: syncopts-lab
+  annotations:
+    # Overrides application-wide ServerSideApply=true for THIS object only.
+    argocd.argoproj.io/sync-options: ServerSideApply=false
+  labels:
+    lab: argocd-sync-options
+data:
+  status: "client-side-apply-override"

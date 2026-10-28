@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: syncopts-lab
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    # Use the established three-node kubeadm cluster.
+    server: https://kubernetes.default.svc
+    namespace: syncopts-lab
+  source:
+    # Use the same GitOps repository as sts-web / Kyverno.
+    repoURL: https://github.com/shm2/argocd-kyverno-helm-conglomerate.git
+    targetRevision: main
+    path: labs/sync-options/resources
+  # Ignore only the runtime field on this ONE ConfigMap.
+  ignoreDifferences:
+    - group: ""
+      kind: ConfigMap
+      name: syncopts-main
+      namespace: syncopts-lab
+      jsonPointers:
+        - /data/runtime
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+      # Intentionally omit allowEmpty; avoid accidental empty-app pruning.
+    syncOptions:
+      # Keep Kubernetes manifest validation enabled.
+      - Validate=true
+      # Avoid applying resources that already match Git.
+      - ApplyOutOfSyncOnly=true
+      # Let Argo CD create only the destination namespace if missing.
+      - CreateNamespace=true
+      # Foreground garbage collection for pruned resources.
+      - PrunePropagationPolicy=foreground
+      # Defer pruning until other sync waves finish successfully.
+      - PruneLast=true
+      # Avoid disruptive replace/create synchronization.
+      - Replace=false
+      # Apply with Kubernetes managed-fields ownership.
+      - ServerSideApply=true
+      # Refuse to take ownership of resources managed by another Application.
+      - FailOnSharedResource=true
+      # Preserve differences listed above even during sync of live objects.
+      - RespectIgnoreDifferences=true

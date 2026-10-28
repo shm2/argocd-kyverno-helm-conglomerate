@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: syncopts-prunable
+  namespace: syncopts-lab
+  labels:
+    lab: argocd-sync-options
+data:
+  status: "delete-this-file-from-git-to-test-prune"
