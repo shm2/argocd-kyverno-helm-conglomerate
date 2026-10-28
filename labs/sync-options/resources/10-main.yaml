@@ -10,5 +10,5 @@ metadata:
     # This resource uses application-wide ServerSideApply=true.
     lab.example/notes: "Auto-sync, self-heal, and ignoreDifferences demo"
 data:
-  message: "hello-v1"
+  message: "hello-v2"
   runtime: "git-default"
