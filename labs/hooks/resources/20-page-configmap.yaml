@@ -1,0 +1,11 @@
+# Wave 0: this HTML page must exist before the Deployment starts.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hooks-demo-page
+  namespace: hooks-lab
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+data:
+  index.html: |
+    SYNC_WAVES_WORK

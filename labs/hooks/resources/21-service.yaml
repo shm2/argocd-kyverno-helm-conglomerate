@@ -1,0 +1,15 @@
+# Wave 0: stable cluster-internal Service endpoint for smoke tests.
+apiVersion: v1
+kind: Service
+metadata:
+  name: hooks-demo
+  namespace: hooks-lab
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  selector:
+    app: hooks-demo
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

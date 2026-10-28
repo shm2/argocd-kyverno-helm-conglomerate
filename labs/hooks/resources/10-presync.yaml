@@ -1,0 +1,32 @@
+# PreSync hook runs before ordinary Sync resources.
+# BeforeHookCreation makes a named Job run again during a later full sync.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hooks-preflight
+  namespace: hooks-lab
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: preflight
+          image: busybox:1.36
+          env:
+            # Change to "no" in Git for the controlled SyncFail exercise.
+            - name: ALLOW_SYNC
+              value: "yes"
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              echo "PRESYNC_STARTED"
+              if [ "$ALLOW_SYNC" != "yes" ]; then
+                echo "PRESYNC_DENIED (expected in failure experiment)"
+                exit 42
+              fi
+              echo "PRESYNC_PASS"

@@ -1,0 +1,20 @@
+# PostDelete runs only after cascading Application resource deletion.
+# HookSucceeded cleans up this disposable finalization Job automatically.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hooks-postdelete
+  namespace: hooks-lab
+  annotations:
+    argocd.argoproj.io/hook: PostDelete
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: completion
+          image: busybox:1.36
+          command: ["/bin/sh", "-ec"]
+          args: ["echo POSTDELETE_COMPLETED"]

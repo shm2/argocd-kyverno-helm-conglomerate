@@ -1,0 +1,22 @@
+# Independent Argo CD Application; does not own existing StatefulSets or MySQL/Redis.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hooks-lab
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/shm2/argocd-kyverno-helm-conglomerate.git
+    targetRevision: main
+    path: labs/hooks/resources
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: hooks-lab
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

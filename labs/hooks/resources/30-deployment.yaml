@@ -1,0 +1,47 @@
+# Wave 1: use an ordinary, single-replica workload with readiness checks.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hooks-demo
+  namespace: hooks-lab
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hooks-demo
+  template:
+    metadata:
+      labels:
+        app: hooks-demo
+    spec:
+      containers:
+        - name: web
+          image: busybox:1.36
+          # BusyBox httpd serves index.html mounted from the ConfigMap.
+          command: ["/bin/sh", "-ec"]
+          args: ["exec httpd -f -p 8080 -h /www"]
+          ports:
+            - containerPort: 8080
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 3
+          resources:
+            requests:
+              cpu: 10m
+              memory: 24Mi
+            limits:
+              cpu: 150m
+              memory: 96Mi
+          volumeMounts:
+            - name: html
+              mountPath: /www
+              readOnly: true
+      volumes:
+        - name: html
+          configMap:
+            name: hooks-demo-page
