@@ -1,0 +1,77 @@
+# ==============================================
+# PHASE 1: PreSync, wave 3
+# ==============================================
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wave-presync-3
+  namespace: hooks-lab
+  annotations:
+    # Run before ordinary Sync resources
+    argocd.argoproj.io/hook: PreSync
+
+    # Wave 3 within the PreSync phase
+    argocd.argoproj.io/sync-wave: "3"
+
+    # Permit this named Job to execute during future syncs
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: preflight
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - 'date -u "+PRESYNC_WAVE_3 %Y-%m-%dT%H:%M:%SZ"'
+
+---
+# ==============================================
+# PHASE 2: Sync, wave -1
+# ==============================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wave-sync-minus-one
+  namespace: hooks-lab
+  annotations:
+    # Ordinary resource: defaults to the Sync phase
+    # Negative wave means early within that phase
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  phase: "Sync"
+  wave: "-1"
+
+---
+# ==============================================
+# PHASE 3: PostSync, wave 1
+# ==============================================
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wave-postsync-1
+  namespace: hooks-lab
+  annotations:
+    # Execute after successful synchronization and health
+    argocd.argoproj.io/hook: PostSync
+
+    # Wave 1 within the PostSync phase
+    argocd.argoproj.io/sync-wave: "1"
+
+    # Recreate during subsequent full sync operations
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: verification
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - 'date -u "+POSTSYNC_WAVE_1 %Y-%m-%dT%H:%M:%SZ"'
