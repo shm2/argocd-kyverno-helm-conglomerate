@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aslab-gamma-config
+  namespace: appset-lab
+  labels:
+    study: applicationset-demo
+data:
+  # This resource has no manually authored Application CR.
+  application: "gamma"
+  release: "v1"
