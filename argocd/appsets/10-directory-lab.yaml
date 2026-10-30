@@ -1,0 +1,65 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: aslab-directory
+  namespace: argocd
+spec:
+  # Enable modern Go template parameter substitution.
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+
+  generators:
+    - git:
+        # Use the same public GitOps repository.
+        repoURL: https://github.com/shm2/argocd-kyverno-helm-conglomerate.git
+        revision: main
+
+        # Discover one Application per matching directory.
+        directories:
+          - path: labs/appset-demo/apps/*
+
+        # Check for new Git directories every 60 seconds.
+        requeueAfterSeconds: 60
+
+  template:
+    metadata:
+      # Produce aslab-alpha, aslab-beta, etc.
+      name: 'aslab-{{ .path.basenameNormalized }}'
+      labels:
+        study: applicationset-demo
+
+    spec:
+      # Use the existing default AppProject for this isolated lab.
+      project: default
+
+      source:
+        repoURL: https://github.com/shm2/argocd-kyverno-helm-conglomerate.git
+        targetRevision: main
+
+        # Deploy the exact discovered directory.
+        path: '{{ .path.path }}'
+
+      destination:
+        # Target the existing kubeadm cluster.
+        server: https://kubernetes.default.svc
+        namespace: appset-lab
+
+      syncPolicy:
+        automated:
+          # Generated Applications synchronize automatically.
+          enabled: true
+          prune: false
+          selfHeal: true
+
+        syncOptions:
+          # Allow Argo CD to create the lab namespace.
+          - CreateNamespace=true
+
+  syncPolicy:
+    # Allow Application creation and updates.
+    # Prevent automatic deletion of generated Applications.
+    applicationsSync: create-update
+
+    # Preserve child workloads if generated Applications are deleted.
+    preserveResourcesOnDeletion: true

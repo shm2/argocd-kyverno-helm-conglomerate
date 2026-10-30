@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aslab-beta-config
+  namespace: appset-lab
+  labels:
+    study: applicationset-demo
+data:
+  # Beta is independently reconciled.
+  application: "beta"
+  release: "v1"

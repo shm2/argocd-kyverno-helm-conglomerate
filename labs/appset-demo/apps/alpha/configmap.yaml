@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aslab-alpha-config
+  namespace: appset-lab
+  labels:
+    study: applicationset-demo
+data:
+  # Alpha is a standalone generated Application.
+  application: "alpha"
+  release: "v1"
