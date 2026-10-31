@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: team-rbac-lab
+  namespace: argocd
+spec:
+  description: "Least-privilege Argo CD RBAC training"
+
+  # Permit only this trusted GitOps repository.
+  sourceRepos:
+    - https://github.com/shm2/argocd-kyverno-helm-conglomerate.git
+
+  # Permit deployment only into the lab namespace.
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: rbac-lab
+
+  # Deny cluster-scoped resources such as ClusterRoles and CRDs.
+  clusterResourceWhitelist: []
+
+  # Explicitly allow only namespaced ConfigMaps.
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ConfigMap
+
+  # Define project-specific Argo CD permissions.
+  roles:
+    - name: viewer
+      description: "Read project Applications"
+      policies:
+        - p, proj:team-rbac-lab:viewer, applications, get, team-rbac-lab/*, allow
+
+    - name: deployer
+      description: "Read and synchronize project Applications"
+      policies:
+        - p, proj:team-rbac-lab:deployer, applications, get, team-rbac-lab/*, allow
+        - p, proj:team-rbac-lab:deployer, applications, sync, team-rbac-lab/*, allow

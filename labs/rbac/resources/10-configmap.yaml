@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rbac-demo
+  namespace: rbac-lab
+data:
+  # This resource is permitted by the AppProject.
+  owner: "team-rbac-lab"
+  environment: "training"
+  security: "least-privilege"
