@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: fleet-lab
+  namespace: argocd
+spec:
+  description: "Multi-cluster GitOps training project"
+
+  # Only our existing GitOps repository is permitted.
+  sourceRepos:
+    - https://github.com/shm2/argocd-kyverno-helm-conglomerate.git
+
+  # Permit only the fleet-lab namespace on registered clusters.
+  destinations:
+    - server: "*"
+      namespace: fleet-lab
+
+  # Do not manage cluster-scoped resources.
+  clusterResourceWhitelist: []
+
+  # Restrict namespaced resources to ConfigMaps.
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ConfigMap

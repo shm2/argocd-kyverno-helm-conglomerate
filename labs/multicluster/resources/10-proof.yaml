@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fleet-proof
+  labels:
+    lab: multicluster-gitops
+data:
+  # Both target clusters receive this desired state.
+  source: "github-gitops"
+  deployment: "application-set-fleet"
+  version: "v1"

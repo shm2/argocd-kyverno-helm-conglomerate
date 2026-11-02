@@ -1,0 +1,55 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: fleet-demo
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+
+  generators:
+    # Explicitly include the local kubeadm cluster.
+    - list:
+        elements:
+          - name: kubeadm-lab
+            server: https://kubernetes.default.svc
+
+    # Discover registered external clusters by label.
+    - clusters:
+        selector:
+          matchLabels:
+            fleet-lab: "true"
+
+  template:
+    metadata:
+      # Generate one unique Application for each cluster.
+      name: 'fleet-{{ .name }}'
+      labels:
+        lab: multicluster-gitops
+
+    spec:
+      # Enforce our isolated AppProject restrictions.
+      project: fleet-lab
+
+      source:
+        repoURL: https://github.com/shm2/argocd-kyverno-helm-conglomerate.git
+        targetRevision: main
+        path: labs/multicluster/resources
+
+      destination:
+        # Each generator supplies its target API endpoint.
+        server: '{{ .server }}'
+        namespace: fleet-lab
+
+      syncPolicy:
+        automated:
+          enabled: true
+          # Preserve test resources if source files disappear.
+          prune: false
+          selfHeal: true
+
+  syncPolicy:
+    # Permit generating/updating Applications, not deleting them.
+    applicationsSync: create-update
+    preserveResourcesOnDeletion: true
