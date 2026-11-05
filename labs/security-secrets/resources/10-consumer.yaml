@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secret-consumer
+  namespace: secrets-lab
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: secret-consumer
+
+  template:
+    metadata:
+      labels:
+        app: secret-consumer
+    spec:
+      # Do not automatically mount Kubernetes API credentials.
+      automountServiceAccountToken: false
+
+      containers:
+        - name: consumer
+          image: busybox:1.36
+
+          # Verify the mounted key is non-empty.
+          # Never display the credential in container logs.
+          command:
+            - sh
+            - -c
+            - 'test -s /run/credentials/api-key && sleep 36000'
+
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+
+          volumeMounts:
+            # Secret is mounted only in this container.
+            - name: credentials
+              mountPath: /run/credentials
+              readOnly: true
+
+      volumes:
+        - name: credentials
+          secret:
+            # Secret exists independently of the Deployment manifest.
+            secretName: demo-runtime-credentials
