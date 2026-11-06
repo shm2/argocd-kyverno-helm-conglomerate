@@ -1,0 +1,103 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability-stack
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  destination:
+    namespace: observability
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 92.7.0
+    helm:
+      releaseName: observability
+      valueFiles: []
+      values: |
+        fullnameOverride: observability
+
+        crds:
+          enabled: true
+
+        defaultRules:
+          create: false
+
+        alertmanager:
+          enabled: false
+
+        kubeApiServer:
+          enabled: false
+
+        kubeControllerManager:
+          enabled: false
+
+        kubeScheduler:
+          enabled: false
+
+        kubeEtcd:
+          enabled: false
+
+        kubeProxy:
+          enabled: false
+
+        kubelet:
+          enabled: false
+
+        coreDns:
+          enabled: false
+
+        kubeStateMetrics:
+          enabled: false
+
+        nodeExporter:
+          enabled: false
+
+        grafana:
+          enabled: true
+          adminPassword: admin123
+          service:
+            type: ClusterIP
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 384Mi
+
+        prometheusOperator:
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 384Mi
+
+        prometheus:
+          service:
+            type: ClusterIP
+          prometheusSpec:
+            retention: 3d
+            replicas: 1
+            serviceMonitorSelectorNilUsesHelmValues: false
+            podMonitorSelectorNilUsesHelmValues: false
+            serviceMonitorNamespaceSelector: {}
+            podMonitorNamespaceSelector: {}
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                cpu: 600m
+                memory: 1Gi
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

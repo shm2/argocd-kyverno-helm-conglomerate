@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability-argocd
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  destination:
+    namespace: observability
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://github.com/shm2/argocd-kyverno-helm-conglomerate.git
+    targetRevision: main
+    path: labs/observability/resources
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
